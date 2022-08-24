@@ -68,7 +68,26 @@ app.post("/products/create", (req, res) => {
 });
 
 app.put("/products/update", (req, res) => {
-  res.send("Hello World!");
+  MongoClient.connect(url, function (err, db) {
+    if (err) throw err;
+    var dbo = db.db("test");
+    console.log("xxx = ", req.body);
+    var myquery = { _id: ObjectId(req.body._id) };
+    var newvalues = {
+      $set: {
+        title: req.body.title,
+        price: req.body.price,
+        image: req.body.image,
+      },
+    };
+    dbo
+      .collection("products")
+      .updateOne(myquery, newvalues, function (err, result) {
+        if (err) throw err;
+        res.send("1 document updated");
+        db.close();
+      });
+  });
 });
 
 app.delete("/products/delete", (req, res) => {
