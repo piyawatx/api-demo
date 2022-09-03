@@ -1,5 +1,9 @@
 const express = require("express");
 const cors = require("cors");
+
+const path = require("path");
+const multer = require("multer");
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -50,7 +54,6 @@ app.get("/products/:id", (req, res) => {
 
 app.post("/products/create", (req, res) => {
   let product = req.body;
-  console.log(req.body);
   MongoClient.connect(url, function (err, db) {
     if (err) throw err;
     var dbo = db.db("test");
@@ -58,10 +61,12 @@ app.post("/products/create", (req, res) => {
       title: product.title,
       price: product.price,
       image: product.image,
+      imageUrl: product.imageUrl,
     };
     dbo.collection("products").insertOne(myobj, function (err, result) {
       if (err) throw err;
-      res.send("1 document inserted");
+      // console.log(result.insertedId.toString());
+      res.send(result.insertedId.toString());
       db.close();
     });
   });
@@ -71,13 +76,13 @@ app.put("/products/update", (req, res) => {
   MongoClient.connect(url, function (err, db) {
     if (err) throw err;
     var dbo = db.db("test");
-    console.log("xxx = ", req.body);
-    var myquery = { _id: ObjectId(req.body._id) };
+    var myquery = { _id: ObjectId(req.body.id) };
     var newvalues = {
       $set: {
         title: req.body.title,
         price: req.body.price,
         image: req.body.image,
+        imageUrl: req.body.imageUrl,
       },
     };
     dbo
@@ -103,4 +108,23 @@ app.delete("/products/delete", (req, res) => {
       db.close();
     });
   });
+});
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "Images");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+const upload = multer({ storage: storage });
+
+app.post("/upload", upload.single("imagez"), (req, res) => {
+  console.log("req.file", req.file);
+  res.send(req.file);
+});
+
+app.get("/image/:filename", (req, res) => {
+  res.sendFile(path.join(__dirname, "./images", req.params.filename));
 });
