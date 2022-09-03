@@ -2,6 +2,13 @@ const express = require("express");
 const cors = require("cors");
 
 const path = require("path");
+const fs = require('fs');   
+fs.mkdir(path.join(__dirname, 'images'), (err) => {
+    if (err) {
+        return console.error(err);
+    }
+    console.log('Directory created successfully!');
+});
 const multer = require("multer");
 
 const app = express();
